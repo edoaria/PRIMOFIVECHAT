@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRMOFIVE CHAT - Realtime Messaging & Stories</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(241, 245, 249, 0.5); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .chat-bg {
+            background-color: #f8fafc;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .story-ring {
+            background: linear-gradient(45deg, #38bdf8, #0284c7, #0369a1);
+            padding: 2.5px;
+        }
+        .story-ring-seen {
+            background: #cbd5e1;
+            padding: 2px;
+        }
+    </style>
+</head>
+<body class="bg-brand-50 font-sans text-slate-800 antialiased h-screen overflow-hidden flex justify-center items-center p-0 sm:p-2 md:p-4">
+
+    <!-- LOGIN MODAL -->
+    <div id="login-modal" class="fixed inset-0 bg-brand-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl border border-brand-100 text-center">
+            <div class="w-16 h-16 bg-brand-600 text-white rounded-2xl flex items-center justify-center font-bold text-2xl mx-auto mb-4 shadow-lg shadow-brand-200">
+                P5
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800">PRMOFIVE CHAT</h2>
+            <p class="text-sm text-slate-500 mt-1 mb-6">Masukan nama & atur foto profil Anda untuk mulai obrolan real-time.</p>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div class="text-left">
+                    <label class="text-xs font-semibold text-slate-600 ml-1">Nama Tampilan</label>
+                    <input type="text" id="username-input" required placeholder="Contoh: Alex, Budi, Sarah" class="w-full mt-1 px-4 py-3 bg-brand-50/60 border border-brand-200 rounded-xl text-sm focus:outline-none focus:border-brand-500 focus:bg-white transition">
+                </div>
+
+                <div class="text-left">
+                    <label class="text-xs font-semibold text-slate-600 ml-1">Foto Profil (Avatar / File)</label>
+                    <div class="flex items-center gap-3 mt-2">
+                        <img id="login-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Alex" class="w-14 h-14 rounded-full border-2 border-brand-500 object-cover shrink-0">
+                        <div class="flex-1 space-y-2">
+                            <input type="file" id="login-avatar-file" accept="image/*" onchange="handleLoginAvatarFile(event)" class="text-xs text-slate-500 w-full file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-100 file:text-brand-700 hover:file:bg-brand-200 cursor-pointer">
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">Pilih preset di bawah atau unggah foto Anda sendiri.</p>
+                    <div class="flex gap-3 mt-2 justify-center" id="avatar-selector">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Alex" class="avatar-option w-10 h-10 rounded-full border-2 border-brand-500 cursor-pointer hover:scale-110 transition p-0.5" onclick="selectAvatar(this)">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Budi" class="avatar-option w-10 h-10 rounded-full border-2 border-transparent hover:border-brand-300 cursor-pointer hover:scale-110 transition p-0.5" onclick="selectAvatar(this)">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Sarah" class="avatar-option w-10 h-10 rounded-full border-2 border-transparent hover:border-brand-300 cursor-pointer hover:scale-110 transition p-0.5" onclick="selectAvatar(this)">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Rian" class="avatar-option w-10 h-10 rounded-full border-2 border-transparent hover:border-brand-300 cursor-pointer hover:scale-110 transition p-0.5" onclick="selectAvatar(this)">
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-login" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-200 transition transform active:scale-95 flex items-center justify-center gap-2">
+                    <span>Masuk ke PRMOFIVE</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT PROFILE MODAL -->
+    <div id="edit-profile-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl border border-brand-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg text-slate-800">Edit Profil Anda</h3>
+                <button onclick="closeEditProfileModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form onsubmit="saveProfileChanges(event)" class="space-y-4">
+                <div class="flex flex-col items-center justify-center gap-2">
+                    <div class="relative group cursor-pointer" onclick="document.getElementById('profile-file-input').click()">
+                        <img id="profile-edit-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=Alex" class="w-24 h-24 rounded-full object-cover border-4 border-brand-200 shadow-md">
+                        <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition">
+                            <i class="fa-solid fa-camera text-xl"></i>
+                        </div>
+                    </div>
+                    <span class="text-xs text-brand-600 font-medium">Ketuk foto untuk mengunggah dari galeri</span>
+                    <input type="file" id="profile-file-input" accept="image/*" onchange="handleProfileFileSelect(event)" class="hidden">
+                </div>
+
+                <div>
+                    <label class="text-xs font-semibold text-slate-600 ml-1">Atau Gunakan URL Gambar</label>
+                    <input type="text" id="profile-url-input" oninput="updateProfilePreviewFromUrl()" placeholder="https://example.com/foto.jpg" class="w-full mt-1 px-4 py-2.5 bg-brand-50/50 border border-brand-200 rounded-xl text-xs focus:outline-none focus:border-brand-500">
+                </div>
+
+                <div>
+                    <label class="text-xs font-semibold text-slate-600 ml-1">Nama Tampilan</label>
+                    <input type="text" id="profile-name-input" required class="w-full mt-1 px-4 py-2.5 bg-brand-50/50 border border-brand-200 rounded-xl text-sm focus:outline-none focus:border-brand-500">
+                </div>
+
+                <div>
+                    <label class="text-xs font-semibold text-slate-600 ml-1">Pilih Preset Avatar</label>
+                    <div class="flex gap-2 mt-2 justify-center">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Alex" class="w-9 h-9 rounded-full border border-slate-200 cursor-pointer hover:scale-110 transition" onclick="setProfilePresetAvatar(this.src)">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Budi" class="w-9 h-9 rounded-full border border-slate-200 cursor-pointer hover:scale-110 transition" onclick="setProfilePresetAvatar(this.src)">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Sarah" class="w-9 h-9 rounded-full border border-slate-200 cursor-pointer hover:scale-110 transition" onclick="setProfilePresetAvatar(this.src)">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Luna" class="w-9 h-9 rounded-full border border-slate-200 cursor-pointer hover:scale-110 transition" onclick="setProfilePresetAvatar(this.src)">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Felix" class="w-9 h-9 rounded-full border border-slate-200 cursor-pointer hover:scale-110 transition" onclick="setProfilePresetAvatar(this.src)">
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeEditProfileModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-xl text-xs">
+                        Batal
+                    </button>
+                    <button type="submit" class="flex-1 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-xs shadow-md shadow-brand-200">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="w-full h-full max-w-7xl bg-white rounded-none sm:rounded-2xl shadow-2xl flex overflow-hidden border border-brand-100 relative">
+
+        <!-- ================= SIDEBAR NAVIGATION ================= -->
+        <div class="w-16 md:w-20 bg-brand-600 flex flex-col justify-between items-center py-5 shadow-inner z-20 shrink-0">
+            <div class="flex flex-col items-center gap-6 w-full">
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-white text-brand-600 rounded-2xl flex items-center justify-center font-bold text-xl shadow-md cursor-pointer hover:scale-105 transition">
+                    P5
+                </div>
+
+                <nav class="flex flex-col gap-3 w-full px-2 mt-4">
+                    <button onclick="switchTab('chats')" id="nav-chats" class="nav-btn flex flex-col items-center justify-center p-3 rounded-xl text-white bg-white/20 transition group relative" title="Chat">
+                        <i class="fa-solid fa-comments text-lg md:text-xl"></i>
+                        <span class="text-[10px] mt-1 font-medium hidden md:block">Chat</span>
+                    </button>
+                    <button onclick="switchTab('stories')" id="nav-stories" class="nav-btn flex flex-col items-center justify-center p-3 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition group relative" title="Status/Story">
+                        <i class="fa-solid fa-circle-notch text-lg md:text-xl"></i>
+                        <span class="text-[10px] mt-1 font-medium hidden md:block">Story</span>
+                        <span id="story-badge-dot" class="hidden absolute top-2 right-3 w-2.5 h-2.5 bg-brand-300 rounded-full border border-brand-600"></span>
+                    </button>
+                    <button onclick="openEditProfileModal()" class="nav-btn flex flex-col items-center justify-center p-3 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition group relative" title="Pengaturan Profile">
+                        <i class="fa-solid fa-gear text-lg md:text-xl"></i>
+                        <span class="text-[10px] mt-1 font-medium hidden md:block">Profil</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Profile Badge -->
+            <div class="flex flex-col items-center gap-4 w-full px-2">
+                <div class="relative cursor-pointer group" onclick="openEditProfileModal()" title="Klik untuk edit profil">
+                    <img id="my-profile-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" alt="Profile" class="w-10 h-10 rounded-full object-cover border-2 border-brand-200 group-hover:scale-105 transition">
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-brand-600 rounded-full"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= CHAT LIST / SECONDARY PANEL ================= -->
+        <div id="secondary-panel" class="w-full sm:w-80 md:w-96 bg-white border-r border-slate-100 flex flex-col h-full z-10 shrink-0 transition-all duration-300">
+            
+            <!-- PANEL HEADER -->
+            <div class="p-4 border-b border-slate-100 bg-white">
+                <div class="flex justify-between items-center mb-2">
+                    <div>
+                        <h1 id="panel-title" class="text-xl font-bold text-slate-800 tracking-tight">PRMOFIVE CHAT</h1>
+                        <p class="text-[11px] text-emerald-600 font-medium flex items-center gap-1 mt-0.5">
+                            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                            Terhubung Realtime
+                        </p>
+                    </div>
+                </div>
+
+                <!-- User ID Copy Banner -->
+                <div class="bg-brand-50 border border-brand-200 p-2 rounded-xl flex justify-between items-center text-xs text-brand-800">
+                    <div class="truncate">
+                        <span class="font-bold">ID Anda:</span> <span id="my-user-id-display" class="font-mono text-[11px] bg-white px-1.5 py-0.5 rounded border border-brand-200">Loading...</span>
+                    </div>
+                    <button onclick="copyMyUserId()" class="text-brand-600 hover:text-brand-800 font-semibold text-[11px] ml-2 shrink-0">
+                        <i class="fa-regular fa-copy"></i> Salin
+                    </button>
+                </div>
+
+                <!-- Search Input -->
+                <div class="mt-3 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="search-contacts-input" oninput="filterContactsList()" placeholder="Cari percakapan atau kontak..." class="w-full pl-9 pr-3 py-2 bg-slate-100 border border-transparent rounded-xl text-xs focus:bg-white focus:border-brand-300 focus:outline-none transition">
+                </div>
+            </div>
+
+            <!-- TAB CONTENTS: CHATS -->
+            <div id="tab-content-chats" class="flex-1 overflow-y-auto">
+                <div class="p-3 bg-slate-50 border-b border-slate-100">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">Ruang Percakapan</span>
+                </div>
+
+                <!-- Global Public Channel -->
+                <div onclick="selectChannel('global', 'Ruang Chat Publik', 'https://api.dicebear.com/7.x/identicon/svg?seed=global')" id="channel-global" class="p-3.5 flex items-center gap-3 cursor-pointer transition bg-brand-50/80 border-l-4 border-brand-600 hover:bg-slate-50">
+                    <div class="w-12 h-12 bg-brand-600 text-white rounded-full flex items-center justify-center font-bold text-lg shrink-0">
+                        <i class="fa-solid fa-earth-americas"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-semibold text-sm text-slate-800 truncate">Ruang Chat Publik</h3>
+                        <p class="text-xs text-slate-500 truncate">Obrolan terbuka untuk semua orang</p>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-slate-50 border-b border-slate-100 mt-2">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">Pengguna Aktif</span>
+                </div>
+
+                <!-- Realtime Online Users List -->
+                <div class="divide-y divide-slate-50" id="users-list-container">
+                    <div class="p-4 text-center text-xs text-slate-400">Mencari pengguna lain...</div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENTS: STORIES -->
+            <div id="tab-content-stories" class="flex-1 overflow-y-auto hidden">
+                <!-- My Story Section -->
+                <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="relative cursor-pointer" onclick="openCreateStoryModal()">
+                            <img id="my-story-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-12 h-12 rounded-full object-cover">
+                            <span class="absolute bottom-0 right-0 bg-brand-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs border-2 border-white">+</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm text-slate-800">Status Saya</h3>
+                            <p class="text-xs text-slate-400">Ketuk untuk buat story baru</p>
+                        </div>
+                    </div>
+                    <button onclick="openCreateStoryModal()" class="p-2.5 bg-brand-50 hover:bg-brand-100 text-brand-600 rounded-xl transition text-xs font-semibold">
+                        <i class="fa-solid fa-plus mr-1"></i> Buat
+                    </button>
+                </div>
+
+                <div class="p-3 bg-slate-50 border-b border-slate-100">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">Pembaruan Story Terbaru</span>
+                </div>
+
+                <!-- Realtime Stories List -->
+                <div id="stories-list-container" class="divide-y divide-slate-50">
+                    <div class="p-4 text-center text-xs text-slate-400">Belum ada story terbaru...</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= MAIN CHAT AREA ================= -->
+        <div id="main-chat-area" class="flex-1 bg-slate-50 flex flex-col h-full relative chat-bg">
+            
+            <!-- Chat Active Header -->
+            <div id="chat-header" class="h-16 bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 md:px-6 flex justify-between items-center z-10">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleMobileSidebar()" class="sm:hidden text-slate-600 hover:text-brand-600 pr-1">
+                        <i class="fa-solid fa-arrow-left text-lg"></i>
+                    </button>
+                    <img id="active-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=global" class="w-10 h-10 rounded-full object-cover border border-brand-200">
+                    <div>
+                        <h2 id="active-name" class="font-bold text-slate-800 text-sm md:text-base">Ruang Chat Publik</h2>
+                        <p id="active-status-text" class="text-xs text-emerald-600 font-medium">Semua Pengguna Terhubung</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="triggerImageAttachment()" class="p-2.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition" title="Kirim Gambar">
+                        <i class="fa-solid fa-paperclip text-base"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages Stream Container -->
+            <div id="messages-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+                <div class="text-center text-xs text-slate-400 my-4">Memuat pesan realtime...</div>
+            </div>
+
+            <!-- Voice Recording Status Bar (Simulated) -->
+            <div id="voice-recording-bar" class="hidden bg-rose-50 border-t border-rose-100 p-3 flex justify-between items-center px-6">
+                <div class="flex items-center gap-3 text-rose-600">
+                    <span class="w-3 h-3 bg-rose-500 rounded-full animate-ping"></span>
+                    <span class="text-xs font-bold">Merekam Suara...</span>
+                    <span id="recording-timer" class="text-xs font-mono">00:00</span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="cancelVoiceRecording()" class="p-2 text-slate-400 hover:text-rose-600 text-xs font-semibold">Batal</button>
+                    <button onclick="sendVoiceRecording()" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-xs font-semibold shadow">Kirim VN</button>
+                </div>
+            </div>
+
+            <!-- Emoji Picker UI Dropdown -->
+            <div id="emoji-picker" class="hidden absolute bottom-20 left-6 bg-white shadow-xl rounded-2xl p-3 border border-slate-100 z-30 grid grid-cols-6 gap-2 text-xl max-w-xs">
+                <button onclick="addEmoji('😊')" class="hover:bg-brand-50 p-1 rounded">😊</button>
+                <button onclick="addEmoji('😂')" class="hover:bg-brand-50 p-1 rounded">😂</button>
+                <button onclick="addEmoji('🔥')" class="hover:bg-brand-50 p-1 rounded">🔥</button>
+                <button onclick="addEmoji('👍')" class="hover:bg-brand-50 p-1 rounded">👍</button>
+                <button onclick="addEmoji('❤️')" class="hover:bg-brand-50 p-1 rounded">❤️</button>
+                <button onclick="addEmoji('🚀')" class="hover:bg-brand-50 p-1 rounded">🚀</button>
+            </div>
+
+            <!-- Hidden Image File Input for Attachments -->
+            <input type="file" id="chat-image-input" accept="image/*" onchange="handleImageAttachment(event)" class="hidden">
+
+            <!-- Input Controls Area -->
+            <div class="p-3 md:p-4 bg-white border-t border-slate-100">
+                <form id="message-form" onsubmit="handleSendMessage(event)" class="flex items-center gap-2">
+                    <button type="button" onclick="toggleEmojiPicker()" class="p-2.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition">
+                        <i class="fa-regular fa-face-smile text-lg"></i>
+                    </button>
+
+                    <input type="text" id="message-input" placeholder="Ketik pesan realtime..." autocomplete="off" class="flex-1 bg-brand-50/50 border border-brand-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-400 focus:bg-white transition">
+
+                    <button type="button" onclick="startVoiceRecording()" class="p-2.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition" title="Pesan Suara">
+                        <i class="fa-solid fa-microphone text-lg"></i>
+                    </button>
+
+                    <button type="submit" class="p-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-md shadow-brand-200 transition transform active:scale-95 flex items-center justify-center">
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ================= CREATE STORY MODAL ================= -->
+    <div id="create-story-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl border border-brand-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg text-slate-800">Buat Story Baru</h3>
+                <button onclick="closeCreateStoryModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="flex gap-2 mb-4">
+                <button onclick="setStoryType('text')" id="btn-story-text" class="flex-1 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white shadow-sm">Teks Story</button>
+                <button onclick="setStoryType('image')" id="btn-story-image" class="flex-1 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600">Gambar Story</button>
+            </div>
+
+            <!-- Story Preview Card -->
+            <div id="story-preview-bg" class="w-full h-64 rounded-2xl bg-brand-600 p-6 flex flex-col items-center justify-center text-center text-white relative overflow-hidden transition-all shadow-inner mb-4">
+                <p id="story-preview-text" class="font-semibold text-lg max-w-xs break-words">Ketik sesuatu...</p>
+                <img id="story-preview-img" src="" class="hidden absolute inset-0 w-full h-full object-cover">
+            </div>
+
+            <!-- Input Controls -->
+            <div id="story-text-controls" class="space-y-3">
+                <input type="text" id="story-input-text" oninput="updateStoryPreview()" placeholder="Tuliskan teks story..." class="w-full px-4 py-3 bg-brand-50/50 border border-brand-200 rounded-xl text-sm focus:outline-none focus:border-brand-500">
+                <div class="flex gap-2 items-center">
+                    <span class="text-xs text-slate-500 font-semibold">Warna BG:</span>
+                    <button onclick="setStoryBg('#0284c7')" class="w-7 h-7 rounded-full bg-brand-600 border-2 border-white shadow"></button>
+                    <button onclick="setStoryBg('#0d9488')" class="w-7 h-7 rounded-full bg-teal-600 border-2 border-white shadow"></button>
+                    <button onclick="setStoryBg('#7c3aed')" class="w-7 h-7 rounded-full bg-violet-600 border-2 border-white shadow"></button>
+                    <button onclick="setStoryBg('#e11d48')" class="w-7 h-7 rounded-full bg-rose-600 border-2 border-white shadow"></button>
+                    <button onclick="setStoryBg('#059669')" class="w-7 h-7 rounded-full bg-emerald-600 border-2 border-white shadow"></button>
+                </div>
+            </div>
+
+            <div id="story-image-controls" class="hidden space-y-3">
+                <input type="text" id="story-input-imgurl" oninput="updateStoryPreview()" placeholder="Tempel URL Gambar (misal: Unsplash)..." class="w-full px-4 py-3 bg-brand-50/50 border border-brand-200 rounded-xl text-sm focus:outline-none focus:border-brand-500">
+                <p class="text-[11px] text-slate-400">Atau pilih file gambar dari perangkat Anda:</p>
+                <input type="file" id="story-input-file" accept="image/*" onchange="handleStoryFile(event)" class="text-xs text-slate-500">
+            </div>
+
+            <button onclick="publishStory()" class="w-full mt-5 py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-200 transition">
+                Bagikan ke Story Realtime
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= FULLSCREEN STORY VIEWER ================= -->
+    <div id="story-viewer-modal" class="hidden fixed inset-0 bg-slate-950 z-50 flex items-center justify-center">
+        <div class="relative w-full max-w-sm h-full md:h-[90vh] bg-black md:rounded-3xl overflow-hidden flex flex-col justify-between p-4 shadow-2xl">
+            
+            <!-- Progress Bar -->
+            <div class="w-full flex gap-1.5 z-20 pt-2">
+                <div class="h-1 bg-white/30 rounded-full flex-1 overflow-hidden">
+                    <div id="story-progress-bar" class="h-full bg-white w-0 transition-all duration-100 ease-linear"></div>
+                </div>
+            </div>
+
+            <!-- Top Header info -->
+            <div class="flex justify-between items-center z-20 mt-2">
+                <div class="flex items-center gap-3">
+                    <img id="viewer-user-avatar" src="" class="w-10 h-10 rounded-full object-cover border border-white/50">
+                    <div>
+                        <h4 id="viewer-user-name" class="text-white font-bold text-sm">User Name</h4>
+                        <p id="viewer-time" class="text-white/70 text-[11px]">Baru saja</p>
+                    </div>
+                </div>
+                <button onclick="closeStoryViewer()" class="text-white/80 hover:text-white p-2">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Content Area -->
+            <div id="viewer-body" class="absolute inset-0 flex items-center justify-center p-8 text-center text-white z-10">
+                <!-- Text / Image Story dynamically inserted here -->
+            </div>
+
+            <!-- Reply to Story Input -->
+            <div class="z-20 w-full mb-2">
+                <form onsubmit="handleReplyStory(event)" class="flex items-center gap-2 bg-black/40 backdrop-blur-md p-2 rounded-2xl border border-white/20">
+                    <input type="text" id="story-reply-input" placeholder="Balas story ini..." class="flex-1 bg-transparent px-3 py-1.5 text-sm text-white placeholder-white/60 focus:outline-none">
+                    <button type="submit" class="p-2 bg-brand-600 text-white rounded-xl">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 bg-slate-800 text-white text-xs px-4 py-3 rounded-xl shadow-xl z-50 transition transform translate-y-[-100px] opacity-0 flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-brand-400"></i>
+        <span id="toast-message">Notifikasi</span>
+    </div>
+
+    <!-- FIREBASE MODULE INTEGRATION -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Setup
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'prmofive-chat-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyDummyKeyForDemoModeOnly",
+            authDomain: "demo.firebaseapp.com",
+            projectId: "demo-project",
+            storageBucket: "demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:demo"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global States
+        let currentUser = null;
+        let selectedAvatarUrl = "https://api.dicebear.com/7.x/bottts/svg?seed=Alex";
+        let tempProfileAvatarUrl = null;
+        let activeChannelId = 'global';
+        let activeChannelName = 'Ruang Chat Publik';
+        let unsubscribeMessages = null;
+        let allUsersData = [];
+
+        // Voice Recording States
+        let recordingInterval = null;
+        let recordingSeconds = 0;
+
+        // Story States
+        let storyType = 'text';
+        let storyBgColor = '#0284c7';
+        let storyImageData = '';
+        let activeStoryUser = null;
+        let storyProgressTimer = null;
+        let storyProgressVal = 0;
+
+        window.selectAvatar = (element) => {
+            document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('border-brand-500'));
+            document.querySelectorAll('.avatar-option').forEach(el => el.classList.add('border-transparent'));
+            element.classList.remove('border-transparent');
+            element.classList.add('border-brand-500');
+            selectedAvatarUrl = element.src;
+            document.getElementById('login-avatar-preview').src = selectedAvatarUrl;
+        };
+
+        window.handleLoginAvatarFile = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    selectedAvatarUrl = evt.target.result;
+                    document.getElementById('login-avatar-preview').src = selectedAvatarUrl;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth Exception:", err);
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('my-user-id-display').innerText = user.uid;
+                
+                listenToOnlineUsers();
+                listenToMessages('global');
+                listenToStories();
+            }
+        });
+
+        initAuth();
+
+        window.handleLogin = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username-input').value.trim();
+            if (!username || !currentUser) return;
+
+            try {
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', currentUser.uid);
+                await setDoc(userRef, {
+                    uid: currentUser.uid,
+                    name: username,
+                    avatar: selectedAvatarUrl,
+                    lastActive: new Date().toISOString()
+                }, { merge: true });
+
+                document.getElementById('my-profile-avatar').src = selectedAvatarUrl;
+                document.getElementById('my-story-avatar').src = selectedAvatarUrl;
+                document.getElementById('login-modal').classList.add('hidden');
+                showToast(`Selamat Datang, ${username}!`);
+            } catch (err) {
+                console.error("Set Profile Error:", err);
+                showToast("Gagal mendaftar pengguna!");
+            }
+        };
+
+        // EDIT PROFILE LOGIC
+        window.openEditProfileModal = () => {
+            const currentAvatar = document.getElementById('my-profile-avatar').src;
+            const currentName = document.getElementById('username-input').value || 'User';
+            document.getElementById('profile-edit-preview').src = currentAvatar;
+            document.getElementById('profile-name-input').value = currentName;
+            tempProfileAvatarUrl = currentAvatar;
+            document.getElementById('edit-profile-modal').classList.remove('hidden');
+        };
+
+        window.closeEditProfileModal = () => {
+            document.getElementById('edit-profile-modal').classList.add('hidden');
+        };
+
+        window.handleProfileFileSelect = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    tempProfileAvatarUrl = evt.target.result;
+                    document.getElementById('profile-edit-preview').src = tempProfileAvatarUrl;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        window.updateProfilePreviewFromUrl = () => {
+            const url = document.getElementById('profile-url-input').value.trim();
+            if (url) {
+                tempProfileAvatarUrl = url;
+                document.getElementById('profile-edit-preview').src = url;
+            }
+        };
+
+        window.setProfilePresetAvatar = (url) => {
+            tempProfileAvatarUrl = url;
+            document.getElementById('profile-edit-preview').src = url;
+        };
+
+        window.saveProfileChanges = async (e) => {
+            e.preventDefault();
+            const newName = document.getElementById('profile-name-input').value.trim();
+            if (!newName || !currentUser) return;
+
+            try {
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', currentUser.uid);
+                await setDoc(userRef, {
+                    uid: currentUser.uid,
+                    name: newName,
+                    avatar: tempProfileAvatarUrl || selectedAvatarUrl,
+                    lastActive: new Date().toISOString()
+                }, { merge: true });
+
+                selectedAvatarUrl = tempProfileAvatarUrl || selectedAvatarUrl;
+                document.getElementById('my-profile-avatar').src = selectedAvatarUrl;
+                document.getElementById('my-story-avatar').src = selectedAvatarUrl;
+                document.getElementById('username-input').value = newName;
+
+                closeEditProfileModal();
+                showToast("Foto profil & nama berhasil diperbarui!");
+            } catch (err) {
+                console.error("Save Profile Error:", err);
+                showToast("Gagal menyimpan perubahan profil!");
+            }
+        };
+
+        // Tab Switching
+        window.switchTab = (tab) => {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white/20', 'text-white');
+                btn.classList.add('text-white/70');
+            });
+
+            if (tab === 'chats') {
+                document.getElementById('nav-chats').classList.add('bg-white/20', 'text-white');
+                document.getElementById('tab-content-chats').classList.remove('hidden');
+                document.getElementById('tab-content-stories').classList.add('hidden');
+                document.getElementById('panel-title').innerText = "PRMOFIVE CHAT";
+            } else if (tab === 'stories') {
+                document.getElementById('nav-stories').classList.add('bg-white/20', 'text-white');
+                document.getElementById('tab-content-chats').classList.add('hidden');
+                document.getElementById('tab-content-stories').classList.remove('hidden');
+                document.getElementById('panel-title').innerText = "STORY REALTIME";
+            }
+        };
+
+        // Realtime Users List & Search Filter
+        function listenToOnlineUsers() {
+            const usersCol = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+            
+            onSnapshot(usersCol, (snapshot) => {
+                allUsersData = [];
+                snapshot.docs.forEach(docSnap => {
+                    const userData = docSnap.data();
+                    if (userData.uid !== currentUser?.uid) {
+                        allUsersData.push(userData);
+                    }
+                });
+                renderUsersList(allUsersData);
+            }, (err) => console.error("Users Listener Error:", err));
+        }
+
+        function renderUsersList(users) {
+            const container = document.getElementById('users-list-container');
+            container.innerHTML = '';
+
+            users.forEach(userData => {
+                const userHtml = `
+                    <div onclick="selectChannel('${userData.uid}', '${userData.name}', '${userData.avatar}')" class="p-3 flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition">
+                        <div class="relative shrink-0">
+                            <img src="${userData.avatar}" class="w-10 h-10 rounded-full object-cover">
+                            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-sm text-slate-800 truncate">${userData.name}</h4>
+                            <p class="text-[11px] text-slate-400 truncate">Klik untuk mengobrol</p>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += userHtml;
+            });
+
+            if (users.length === 0) {
+                container.innerHTML = '<div class="p-4 text-center text-xs text-slate-400">Tidak ada pengguna ditemukan.</div>';
+            }
+        }
+
+        window.filterContactsList = () => {
+            const query = document.getElementById('search-contacts-input').value.toLowerCase();
+            const filtered = allUsersData.filter(u => u.name.toLowerCase().includes(query));
+            renderUsersList(filtered);
+        };
+
+        // Switch Active Chat
+        window.selectChannel = (channelId, name, avatar) => {
+            activeChannelId = channelId;
+            activeChannelName = name;
+
+            document.getElementById('active-name').innerText = name;
+            document.getElementById('active-avatar').src = avatar;
+            document.getElementById('active-status-text').innerText = channelId === 'global' ? 'Semua Pengguna Terhubung' : 'Pesan Langsung';
+
+            listenToMessages(channelId);
+
+            if (window.innerWidth < 640) {
+                document.getElementById('secondary-panel').classList.add('hidden');
+            }
+        };
+
+        // Realtime Messages Listener
+        function listenToMessages(channelId) {
+            if (unsubscribeMessages) unsubscribeMessages();
+
+            const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', `messages_${channelId}`);
+
+            unsubscribeMessages = onSnapshot(messagesCol, (snapshot) => {
+                const container = document.getElementById('messages-container');
+                container.innerHTML = '';
+
+                let msgs = [];
+                snapshot.docs.forEach(docSnap => msgs.push({ id: docSnap.id, ...docSnap.data() }));
+
+                msgs.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+                msgs.forEach(msg => {
+                    const isMe = msg.senderUid === currentUser?.uid;
+                    const html = `
+                        <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+                            <div class="max-w-[75%] md:max-w-[60%] ${isMe ? 'bg-brand-600 text-white rounded-2xl rounded-tr-none' : 'bg-white text-slate-800 rounded-2xl rounded-tl-none'} p-3 shadow-sm border ${isMe ? 'border-brand-600' : 'border-slate-100'}">
+                                ${!isMe ? `<p class="text-[10px] font-bold text-brand-600 mb-1">${msg.senderName || 'User'}</p>` : ''}
+                                ${msg.replyToStory ? `<div class="bg-black/10 p-2 rounded-lg text-xs mb-2 border-l-2 border-brand-300 italic">Membalas Story: "${msg.replyToStory}"</div>` : ''}
+                                ${msg.imageUrl ? `<img src="${msg.imageUrl}" class="w-full max-h-60 object-cover rounded-xl mb-2">` : ''}
+                                ${msg.isVoice ? `<div class="flex items-center gap-2 my-1"><i class="fa-solid fa-play text-xs"></i><div class="h-1 bg-brand-200 flex-1 rounded"></div><span class="text-[10px]">${msg.text}</span></div>` : `<p class="text-sm leading-relaxed">${msg.text}</p>`}
+                                <div class="flex items-center justify-end gap-1 mt-1 text-[10px] ${isMe ? 'text-brand-100' : 'text-slate-400'}">
+                                    <span>${msg.time}</span>
+                                    ${isMe ? '<i class="fa-solid fa-check-double text-[9px]"></i>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+
+                container.scrollTop = container.scrollHeight;
+            }, (err) => console.error("Messages Listener Error:", err));
+        }
+
+        // Send Message & Attachments
+        window.handleSendMessage = async (e, customText = null, replyStoryContext = null, imageUrl = null, isVoice = false) => {
+            if (e) e.preventDefault();
+            const input = document.getElementById('message-input');
+            const text = customText || input.value.trim();
+
+            if ((!text && !imageUrl) || !currentUser) return;
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            try {
+                const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', `messages_${activeChannelId}`);
+                await addDoc(messagesCol, {
+                    text: text || '',
+                    senderUid: currentUser.uid,
+                    senderName: document.getElementById('username-input').value || 'User',
+                    time: timeStr,
+                    imageUrl: imageUrl || null,
+                    isVoice: isVoice,
+                    replyToStory: replyStoryContext || null,
+                    createdAt: now.toISOString()
+                });
+
+                if (!customText && !imageUrl) input.value = '';
+            } catch (err) {
+                console.error("Send Message Error:", err);
+                showToast("Gagal mengirim pesan!");
+            }
+        };
+
+        // Image Attachment Handler
+        window.triggerImageAttachment = () => document.getElementById('chat-image-input').click();
+
+        window.handleImageAttachment = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    handleSendMessage(null, "Gambar Terkirim", null, evt.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        // Simulated Voice Note Recording
+        window.startVoiceRecording = () => {
+            recordingSeconds = 0;
+            document.getElementById('voice-recording-bar').classList.remove('hidden');
+            recordingInterval = setInterval(() => {
+                recordingSeconds++;
+                const mins = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+                const secs = String(recordingSeconds % 60).padStart(2, '0');
+                document.getElementById('recording-timer').innerText = `${mins}:${secs}`;
+            }, 1000);
+        };
+
+        window.cancelVoiceRecording = () => {
+            clearInterval(recordingInterval);
+            document.getElementById('voice-recording-bar').classList.add('hidden');
+        };
+
+        window.sendVoiceRecording = () => {
+            clearInterval(recordingInterval);
+            document.getElementById('voice-recording-bar').classList.add('hidden');
+            const duration = document.getElementById('recording-timer').innerText;
+            handleSendMessage(null, `Pesan Suara (${duration})`, null, null, true);
+        };
+
+        // REALTIME STORIES FEATURE
+        function listenToStories() {
+            const storiesCol = collection(db, 'artifacts', appId, 'public', 'data', 'stories');
+
+            onSnapshot(storiesCol, (snapshot) => {
+                const container = document.getElementById('stories-list-container');
+                container.innerHTML = '';
+
+                let stories = [];
+                const now = new Date().getTime();
+
+                snapshot.docs.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const storyTime = new Date(data.createdAt).getTime();
+                    if (now - storyTime < 24 * 60 * 60 * 1000) {
+                        stories.push({ id: docSnap.id, ...data });
+                    }
+                });
+
+                stories.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                stories.forEach(story => {
+                    const html = `
+                        <div onclick="viewStory('${encodeURIComponent(JSON.stringify(story))}')" class="p-3 flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition">
+                            <div class="story-ring rounded-full shrink-0">
+                                <img src="${story.authorAvatar}" class="w-11 h-11 rounded-full object-cover border-2 border-white">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-semibold text-sm text-slate-800 truncate">${story.authorName}</h4>
+                                <p class="text-[11px] text-slate-400 truncate">${story.timeStr}</p>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+
+                if (stories.length > 0) {
+                    document.getElementById('story-badge-dot').classList.remove('hidden');
+                }
+
+                if (container.children.length === 0) {
+                    container.innerHTML = '<div class="p-4 text-center text-xs text-slate-400">Belum ada story dalam 24 jam terakhir.</div>';
+                }
+            });
+        }
+
+        // Story Modal Helpers
+        window.openCreateStoryModal = () => document.getElementById('create-story-modal').classList.remove('hidden');
+        window.closeCreateStoryModal = () => document.getElementById('create-story-modal').classList.add('hidden');
+
+        window.setStoryType = (type) => {
+            storyType = type;
+            if (type === 'text') {
+                document.getElementById('btn-story-text').className = "flex-1 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white shadow-sm";
+                document.getElementById('btn-story-image').className = "flex-1 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600";
+                document.getElementById('story-text-controls').classList.remove('hidden');
+                document.getElementById('story-image-controls').classList.add('hidden');
+                document.getElementById('story-preview-img').classList.add('hidden');
+                document.getElementById('story-preview-text').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-story-image').className = "flex-1 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white shadow-sm";
+                document.getElementById('btn-story-text').className = "flex-1 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600";
+                document.getElementById('story-image-controls').classList.remove('hidden');
+                document.getElementById('story-text-controls').classList.add('hidden');
+            }
+        };
+
+        window.setStoryBg = (color) => {
+            storyBgColor = color;
+            document.getElementById('story-preview-bg').style.backgroundColor = color;
+        };
+
+        window.updateStoryPreview = () => {
+            if (storyType === 'text') {
+                const text = document.getElementById('story-input-text').value;
+                document.getElementById('story-preview-text').innerText = text || "Ketik sesuatu...";
+            } else {
+                const url = document.getElementById('story-input-imgurl').value;
+                if (url) {
+                    document.getElementById('story-preview-img').src = url;
+                    document.getElementById('story-preview-img').classList.remove('hidden');
+                    document.getElementById('story-preview-text').classList.add('hidden');
+                }
+            }
+        };
+
+        window.handleStoryFile = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    storyImageData = evt.target.result;
+                    document.getElementById('story-preview-img').src = storyImageData;
+                    document.getElementById('story-preview-img').classList.remove('hidden');
+                    document.getElementById('story-preview-text').classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        window.publishStory = async () => {
+            if (!currentUser) return;
+            const now = new Date();
+            const textContent = document.getElementById('story-input-text').value;
+            const imgUrl = document.getElementById('story-input-imgurl').value || storyImageData;
+
+            try {
+                const storiesCol = collection(db, 'artifacts', appId, 'public', 'data', 'stories');
+                await addDoc(storiesCol, {
+                    authorUid: currentUser.uid,
+                    authorName: document.getElementById('username-input').value || 'User',
+                    authorAvatar: selectedAvatarUrl,
+                    type: storyType,
+                    text: textContent,
+                    bgColor: storyBgColor,
+                    imageUrl: imgUrl,
+                    timeStr: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    createdAt: now.toISOString()
+                });
+
+                closeCreateStoryModal();
+                showToast("Story berhasil dipublikasikan!");
+            } catch (err) {
+                console.error("Publish Story Error:", err);
+                showToast("Gagal mempublikasikan story!");
+            }
+        };
+
+        // Fullscreen Story Viewer Controls
+        window.viewStory = (storyJsonEncoded) => {
+            const story = JSON.parse(decodeURIComponent(storyJsonEncoded));
+            activeStoryUser = story;
+
+            document.getElementById('viewer-user-name').innerText = story.authorName;
+            document.getElementById('viewer-user-avatar').src = story.authorAvatar;
+            document.getElementById('viewer-time').innerText = story.timeStr;
+
+            const body = document.getElementById('viewer-body');
+            body.style.backgroundColor = story.type === 'text' ? story.bgColor : '#000';
+
+            if (story.type === 'text') {
+                body.innerHTML = `<p class="text-xl md:text-2xl font-bold max-w-xs leading-relaxed">${story.text}</p>`;
+            } else {
+                body.innerHTML = `<img src="${story.imageUrl}" class="max-h-full max-w-full object-contain">`;
+            }
+
+            document.getElementById('story-viewer-modal').classList.remove('hidden');
+            startStoryTimer();
+        };
+
+        function startStoryTimer() {
+            storyProgressVal = 0;
+            const bar = document.getElementById('story-progress-bar');
+            clearInterval(storyProgressTimer);
+
+            storyProgressTimer = setInterval(() => {
+                storyProgressVal += 2;
+                bar.style.width = `${storyProgressVal}%`;
+                if (storyProgressVal >= 100) {
+                    closeStoryViewer();
+                }
+            }, 100);
+        }
+
+        window.closeStoryViewer = () => {
+            clearInterval(storyProgressTimer);
+            document.getElementById('story-viewer-modal').classList.add('hidden');
+        };
+
+        window.handleReplyStory = (e) => {
+            e.preventDefault();
+            const replyInput = document.getElementById('story-reply-input');
+            const replyText = replyInput.value.trim();
+
+            if (replyText && activeStoryUser) {
+                selectChannel(activeStoryUser.authorUid, activeStoryUser.authorName, activeStoryUser.authorAvatar);
+                handleSendMessage(null, replyText, activeStoryUser.type === 'text' ? activeStoryUser.text : 'Gambar Story');
+                replyInput.value = '';
+                closeStoryViewer();
+                switchTab('chats');
+                showToast("Balasan story terkirim!");
+            }
+        };
+
+        // Basic UI Helpers
+        window.copyMyUserId = () => {
+            if (currentUser) {
+                navigator.clipboard.writeText(currentUser.uid);
+                showToast("ID Pengguna disalin!");
+            }
+        };
+
+        window.toggleMobileSidebar = () => {
+            document.getElementById('secondary-panel').classList.toggle('hidden');
+        };
+
+        window.toggleEmojiPicker = () => {
+            document.getElementById('emoji-picker').classList.toggle('hidden');
+        };
+
+        window.addEmoji = (emoji) => {
+            const input = document.getElementById('message-input');
+            input.value += emoji;
+            window.toggleEmojiPicker();
+            input.focus();
+        };
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-[-100px]', 'opacity-0'), 3000);
+        }
+    </script>
+</body>
+</html>
