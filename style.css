@@ -1,0 +1,33 @@
+::-webkit-scrollbar { 
+    width: 6px; 
+    height: 6px; 
+}
+
+::-webkit-scrollbar-track { 
+    background: rgba(241, 245, 249, 0.5); 
+}
+
+::-webkit-scrollbar-thumb { 
+    background: #cbd5e1; 
+    border-radius: 9999px; 
+}
+
+::-webkit-scrollbar-thumb:hover { 
+    background: #94a3b8; 
+}
+
+.chat-bg {
+    background-color: #f8fafc;
+    background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.story-ring {
+    background: linear-gradient(45deg, #38bdf8, #0284c7, #0369a1);
+    padding: 2.5px;
+}
+
+.story-ring-seen {
+    background: #cbd5e1;
+    padding: 2px;
+}
